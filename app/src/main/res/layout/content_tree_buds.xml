@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:background="@android:color/holo_green_light"
+  app:layout_behavior="@string/appbar_scrolling_view_behavior"
+  tools:context=".TreeBudsActivity"
+  tools:showIn="@layout/activity_tree_buds">
+
+  <EditText
+    android:id="@+id/pidEditText"
+    android:layout_width="wrap_content"
+    android:layout_height="0dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="16dp"
+    android:background="@drawable/rounded_edittext_register_login"
+    android:hint="@string/pid_input_hint"
+    android:importantForAutofill="no"
+    android:inputType="textCapCharacters"
+    android:paddingLeft="@dimen/button_margin"
+    android:paddingRight="@dimen/button_margin"
+    android:textAlignment="viewStart"
+    android:textSize="14sp"
+    app:layout_constrainedHeight="@+id/find_tree_buds"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+  <Button
+    android:id="@+id/find_tree_buds"
+    android:layout_width="wrap_content"
+    android:layout_height="0dp"
+    android:layout_marginStart="24dp"
+    android:background="@drawable/rounded_button"
+    android:paddingLeft="@dimen/button_margin"
+    android:paddingRight="@dimen/button_margin"
+    android:text="@string/find_tree_buds"
+    android:textColor="@android:color/white"
+    android:textSize="12sp"
+    android:textStyle="bold"
+    app:layout_constraintBottom_toBottomOf="@+id/pidEditText"
+    app:layout_constraintStart_toEndOf="@+id/pidEditText"
+    app:layout_constraintTop_toTopOf="@id/pidEditText" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
