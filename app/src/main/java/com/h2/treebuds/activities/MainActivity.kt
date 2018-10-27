@@ -9,9 +9,8 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.h2.treebuds.R
-import com.h2.treebuds.TreeBudsActivity
-import com.h2.treebuds.client.CisAuthResponse
 import com.h2.treebuds.client.CisClient
+import com.h2.treebuds.client.FsSession
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 import retrofit2.Retrofit
@@ -53,37 +52,41 @@ class MainActivity : AppCompatActivity() {
     }
   }
 
-  inner class CisLogin : AsyncTask<String, Void, CisAuthResponse>() {
+  inner class CisLogin : AsyncTask<String, Void, Int>() {
 
-    override fun doInBackground(vararg params: String): CisAuthResponse {
+    override fun doInBackground(vararg params: String): Int {
       Log.d("CisLogin:doInBackground", "userName = ${params[0]} password = ${params[1]}")
+
       val retrofit = Retrofit.Builder()
               .baseUrl("https://ident.familysearch.org/")
-              .addConverterFactory(MoshiConverterFactory.create())
+              .addConverterFactory(MoshiConverterFactory.create().asLenient())
               .build()
       val cisClient = retrofit.create(CisClient::class.java)
-      val response = cisClient.login(params[0], params[1]).execute()
+      val cisResponse = cisClient.login(params[0], params[1]).execute()
+      Log.d("CisLogin:doInBackground", "httpStatus = ${cisResponse.code()}")
 
-      val body = response.body()
-      if (response.isSuccessful && body != null) {
-        return body
+      if (cisResponse.isSuccessful && cisResponse.body() != null) {
+        val sessionId = cisResponse.body()!!.access_token
+        FsSession.sessionId = sessionId
+
+//        val cisUserResponse = cisClient.getUser(sessionId).execute()
+//
+//        if (cisUserResponse.isSuccessful && cisUserResponse.body() != null) {
+//          FsSession.userId = cisUserResponse.body()!!
+//        }
+//        return cisUserResponse.code()
+        FsSession.userId = "cis.user.MMMM-JCC2"
       }
-      val headers = response.headers()
-      Log.d("CisLogin:doInBackground", "headers = $headers")
-      Log.d("CisLogin:doInBackground", "body = ${response.body()}")
-      return buildTestResponse(response.code())
+
+      return cisResponse.code()
     }
 
-    private fun buildTestResponse(httpStatusCode: Int): CisAuthResponse {
-      return CisAuthResponse("failed", "failed with $httpStatusCode")
-    }
-
-    override fun onPostExecute(result: CisAuthResponse) {
-      Log.d("CisLogin:onPostExecute", "token_type = ${result.token_type} ")
-      val intent = Intent(this@MainActivity, TreeBudsActivity::class.java)
-      intent.putExtra("access_token", result.access_token)
-      intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
-      startActivity(intent)
+    override fun onPostExecute(result: Int) {
+      if (result == 200) {
+        val intent = Intent(this@MainActivity, TreeBudsActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
+      }
     }
   }
 }

@@ -6,16 +6,16 @@
   android:layout_height="match_parent"
   android:background="@android:color/holo_green_light"
   app:layout_behavior="@string/appbar_scrolling_view_behavior"
-  tools:context=".TreeBudsActivity"
+  tools:context=".activities.TreeBudsActivity"
   tools:showIn="@layout/activity_tree_buds">
 
   <EditText
-    android:id="@+id/pidEditText"
-    android:layout_width="wrap_content"
-    android:layout_height="0dp"
+    android:id="@+id/edittext_ancestorpid"
+    android:layout_width="0dp"
+    android:layout_height="30dp"
     android:layout_marginStart="16dp"
     android:layout_marginTop="16dp"
-    android:background="@drawable/rounded_edittext_register_login"
+    android:background="@drawable/rounded_edittext_login"
     android:hint="@string/pid_input_hint"
     android:importantForAutofill="no"
     android:inputType="textCapCharacters"
@@ -23,14 +23,14 @@
     android:paddingRight="@dimen/button_margin"
     android:textAlignment="viewStart"
     android:textSize="14sp"
-    app:layout_constrainedHeight="@+id/find_tree_buds"
+    app:layout_constrainedHeight="@+id/button_gettreebuds"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent" />
 
   <Button
-    android:id="@+id/find_tree_buds"
-    android:layout_width="wrap_content"
-    android:layout_height="0dp"
+    android:id="@+id/button_gettreebuds"
+    android:layout_width="0dp"
+    android:layout_height="30dp"
     android:layout_marginStart="24dp"
     android:background="@drawable/rounded_button"
     android:paddingLeft="@dimen/button_margin"
@@ -39,8 +39,20 @@
     android:textColor="@android:color/white"
     android:textSize="12sp"
     android:textStyle="bold"
-    app:layout_constraintBottom_toBottomOf="@+id/pidEditText"
-    app:layout_constraintStart_toEndOf="@+id/pidEditText"
-    app:layout_constraintTop_toTopOf="@id/pidEditText" />
+    app:layout_constraintBottom_toBottomOf="@+id/edittext_ancestorpid"
+    app:layout_constraintStart_toEndOf="@+id/edittext_ancestorpid"
+    app:layout_constraintTop_toTopOf="@id/edittext_ancestorpid" />
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/recyclerview_gettreebuds"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="@+id/edittext_ancestorpid"
+    app:layout_constraintTop_toBottomOf="@id/edittext_ancestorpid" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

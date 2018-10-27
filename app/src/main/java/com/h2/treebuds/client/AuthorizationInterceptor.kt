@@ -1,5 +1,6 @@
 package com.h2.treebuds.client
 
+import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -11,12 +12,13 @@ class AuthorizationInterceptor : Interceptor {
       val original = chain.request()
 
       // Add request Authorization header
-      // TODO: get session from DB
-      val sessionId = "2696d0e3-8fe6-448f-b6e5-cbd52353594f-aws-prod"
+      val sessionId = FsSession.sessionId
       val requestBuilder = original.newBuilder()
               .header("Authorization", "Bearer $sessionId")
 
       val request = requestBuilder.build()
-      return chain.proceed(request)
+    val response = chain.proceed(request)
+    Log.d("AuthorizationInterceptor", "requestUri=${request.url()} httpStatus=${response.code()}")
+    return response
   }
 }
