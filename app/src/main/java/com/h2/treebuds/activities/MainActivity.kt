@@ -7,7 +7,6 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.snackbar.Snackbar
 import com.h2.treebuds.R
 import com.h2.treebuds.client.CisClient
 import com.h2.treebuds.client.FsSession
@@ -22,11 +21,6 @@ class MainActivity : AppCompatActivity() {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
     setSupportActionBar(toolbar)
-
-    fab.setOnClickListener { view ->
-      Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-              .setAction("Action", null).show()
-    }
 
     login_button_login.setOnClickListener {
       if (username_edittext_login.text.isNotBlank() &&
