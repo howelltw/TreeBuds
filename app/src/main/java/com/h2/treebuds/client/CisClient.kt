@@ -1,6 +1,7 @@
 package com.h2.treebuds.client
 
 import com.h2.treebuds.client.models.CisAuthResponse
+import com.h2.treebuds.client.models.CisUser
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -15,6 +16,7 @@ interface CisClient {
             @Field("grant_type") grantType : String = "password",
             @Field("client_id") devKey : String = "") : Call<CisAuthResponse>
 
+  @Headers("Accept: application/json")
   @GET("/cis-public-api/v4/user")
-  fun getUser(@Query("sessionId") sessionId : String) :Call<String>
+  fun getUser(@Query("sessionId") sessionId : String) :Call<CisUser>
 }

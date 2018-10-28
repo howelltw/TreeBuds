@@ -69,13 +69,12 @@ class MainActivity : AppCompatActivity() {
         val sessionId = cisResponse.body()!!.access_token
         FsSession.sessionId = sessionId
 
-//        val cisUserResponse = cisClient.getUser(sessionId).execute()
-//
-//        if (cisUserResponse.isSuccessful && cisUserResponse.body() != null) {
-//          FsSession.userId = cisUserResponse.body()!!
-//        }
-//        return cisUserResponse.code()
-        FsSession.userId = "cis.user.MMMM-JCC2"
+        val cisUserResponse = cisClient.getUser(sessionId).execute()
+
+        if (cisUserResponse.isSuccessful && cisUserResponse.body() != null) {
+          FsSession.userId = cisUserResponse.body()!!.users[0].id
+        }
+        return cisUserResponse.code()
       }
 
       return cisResponse.code()
