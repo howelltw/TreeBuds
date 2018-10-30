@@ -66,6 +66,13 @@ class TreeBudsActivity : AppCompatActivity() {
       viewHolder.itemView.person_name.text = treeBudRow.personName
       viewHolder.itemView.person_pid.text = treeBudRow.personId
       viewHolder.itemView.person_lifespan.text = treeBudRow.lifeSpan
+
+      val photoResource = when (treeBudRow.gender) {
+        "FEMALE" -> R.drawable.female_empty_portrait
+        "MALE" -> R.drawable.male_empty_portrait
+        else -> R.drawable.unknown_empty_portrait
+      }
+      viewHolder.itemView.person_photo.setImageResource(photoResource)
       viewHolder.itemView.person_photo.visibility = View.VISIBLE
       viewHolder.itemView.record_hint.visibility = View.VISIBLE
 
@@ -81,6 +88,8 @@ class TreeBudsActivity : AppCompatActivity() {
         dialog.popup_birth_place.text = treeBudRow.birthPlace
         dialog.popup_death.text = treeBudRow.deathDate
         dialog.popup_death_place.text = treeBudRow.deathPlace
+        dialog.popup_photo.setImageResource(photoResource)
+        dialog.popup_photo.visibility = View.VISIBLE
 
         dialog.show()
       }
@@ -132,6 +141,7 @@ class TreeBudsActivity : AppCompatActivity() {
             treeBudRowList.add(TreeBudRow(it.personId,
                     tfBody.summary.name,
                     tfBody.summary.lifespan,
+                    tfBody.summary.gender,
                     tfBody.summary.lifespanBegin.date?.original,
                     tfBody.summary.lifespanBegin.place?.original,
                     tfBody.summary.lifespanEnd.date?.original,
@@ -141,11 +151,11 @@ class TreeBudsActivity : AppCompatActivity() {
         return treeBudRowList
       }
 
-      return mutableListOf(TreeBudRow(popResponse.code().toString(), "POP Error", "None", "None", "None", "None", "None"))
+      return mutableListOf(TreeBudRow(popResponse.code().toString(), "POP Error", "None", "Unknown","None", "None", "None", "None"))
     }
 
 
   }
 }
 
-data class TreeBudRow(val personId: String, val personName: String, val lifeSpan: String, val birthDate: String?, val birthPlace: String?, val deathDate: String?, val deathPlace: String?)
+data class TreeBudRow(val personId: String, val personName: String, val lifeSpan: String, val gender: String, val birthDate: String?, val birthPlace: String?, val deathDate: String?, val deathPlace: String?)
