@@ -2,6 +2,7 @@ package com.h2.treebuds.activities
 
 import android.app.Dialog
 import android.content.Context
+import android.content.DialogInterface
 import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +10,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import android.widget.Toast.LENGTH_LONG
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.h2.treebuds.R
@@ -77,7 +79,7 @@ class TreeBudsActivity : AppCompatActivity() {
       viewHolder.itemView.record_hint.visibility = View.VISIBLE
 
       viewHolder.itemView.isClickable = true
-      viewHolder.itemView.setOnClickListener {view ->
+      viewHolder.itemView.setOnClickListener { view ->
         val dialog = Dialog(view.context)
         dialog.setContentView(R.layout.person_popup)
         dialog.setCancelable(true)
@@ -93,6 +95,35 @@ class TreeBudsActivity : AppCompatActivity() {
 
         dialog.show()
       }
+
+      viewHolder.itemView.isLongClickable = true
+      viewHolder.itemView.setOnLongClickListener { view ->
+        showDialog(view)
+        return@setOnLongClickListener true
+      }
+    }
+
+    private fun showDialog(view: View) {
+      lateinit var dialog: AlertDialog
+
+      val builder = AlertDialog.Builder(view.context)
+      builder.setTitle("Create ToDo Item")
+      builder.setMessage("Create FamilySearch ToDo Item for this TreeBud?")
+
+      val dialogClickListener = DialogInterface.OnClickListener { _, which ->
+        when (which){
+          DialogInterface.BUTTON_POSITIVE -> Toast.makeText(view.context, "Yes button clicked.", Toast.LENGTH_SHORT).show()
+          DialogInterface.BUTTON_NEGATIVE -> dialog.dismiss()
+          DialogInterface.BUTTON_NEUTRAL -> dialog.dismiss()
+        }
+      }
+
+      builder.setPositiveButton("YES", dialogClickListener)
+      builder.setNegativeButton("NO", dialogClickListener)
+      builder.setNeutralButton("CANCEL", dialogClickListener)
+
+      dialog = builder.create()
+      dialog.show()
     }
   }
 
@@ -107,6 +138,7 @@ class TreeBudsActivity : AppCompatActivity() {
 
     override fun onPostExecute(result: MutableList<TreeBudRow>) {
       recyclerview_gettreebuds.adapter = groupAdapter
+      groupAdapter.clear()
 
       if (result.isEmpty()) {
         Toast.makeText(applicationContext, "No TreeBuds found for this Ancestor", LENGTH_LONG).show()
@@ -151,7 +183,7 @@ class TreeBudsActivity : AppCompatActivity() {
         return treeBudRowList
       }
 
-      return mutableListOf(TreeBudRow(popResponse.code().toString(), "POP Error", "None", "Unknown","None", "None", "None", "None"))
+      return mutableListOf(TreeBudRow(popResponse.code().toString(), "POP Error", "httpStatus  =", "Unknown", null, null, null,null))
     }
 
 
