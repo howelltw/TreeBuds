@@ -4,4 +4,5 @@
   <string name="pid_input_hint">FamilyTree Person ID</string>
   <string name="find_tree_buds">FIND TREEBUDS</string>
   <string name="title_activity_tree_buds">TreeBudsActivity</string>
+  <string name="record_hint_description">Click here to get Record details</string>
 </resources>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:layout_marginTop="8dp"
+  android:baselineAligned="false"
+  android:background="@drawable/rounded_edittext_login"
+  >
+
+  <FrameLayout
+    android:id="@+id/person_photo_container"
+    android:layout_width="40sp"
+    android:layout_height="40sp">
+
+    <ImageView
+      android:id="@+id/person_photo"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:background="@android:color/transparent"
+      android:scaleType="fitCenter"
+      tools:src="@drawable/unknown_empty_portrait"/>
+
+    <ProgressBar
+      android:id="@+id/person_photo_progress_spinner"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:layout_gravity="center" />
+  </FrameLayout>
+
+  <RelativeLayout
+    android:id="@+id/person_name_container"
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:layout_centerVertical="true"
+    android:layout_toEndOf="@id/person_photo_container"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp">
+
+    <TextView
+      android:id="@+id/person_name"
+      style="@style/NameText.Single"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      tools:text="Person's Display Name" />
+
+    <TextView
+      android:id="@+id/person_lifespan"
+      style="@style/LifeSpanText"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/person_name"
+      tools:text="1900-1950" />
+
+    <TextView
+      android:id="@+id/person_pid"
+      style="@style/PidText"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_below="@id/person_name"
+      android:layout_toEndOf="@id/person_lifespan"
+      tools:text="MMMM-695" />
+
+  </RelativeLayout>
+
+  <FrameLayout
+    android:id="@+id/record_hint_container"
+    android:layout_width="40sp"
+    android:layout_height="40sp"
+    android:layout_toEndOf="@+id/person_name_container">
+
+    <ImageView
+      android:id="@+id/record_hint"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:background="@android:color/transparent"
+      android:scaleType="fitCenter"
+      app:srcCompat="@drawable/record_hint_icon"
+      android:contentDescription="@string/record_hint_description" />
+  </FrameLayout>
+</RelativeLayout>

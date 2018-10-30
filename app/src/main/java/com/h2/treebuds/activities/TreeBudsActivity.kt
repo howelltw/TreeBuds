@@ -1,24 +1,28 @@
 package com.h2.treebuds.activities
 
+import android.app.Dialog
+import android.content.Context
 import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import android.widget.Toast.LENGTH_LONG
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.android.material.snackbar.Snackbar
 import com.h2.treebuds.R
 import com.h2.treebuds.client.AuthorizationInterceptor
 import com.h2.treebuds.client.FsSession
 import com.h2.treebuds.client.PopClient
-import com.h2.treebuds.client.models.PersonSummary
-import com.h2.treebuds.client.models.Summaries
+import com.h2.treebuds.client.TFClient
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.Item
 import com.xwray.groupie.ViewHolder
 import kotlinx.android.synthetic.main.activity_tree_buds.*
 import kotlinx.android.synthetic.main.content_tree_buds.*
-import kotlinx.android.synthetic.main.tree_bud_row.view.*
+import kotlinx.android.synthetic.main.person_popup.*
+import kotlinx.android.synthetic.main.tree_bud_list_item.view.*
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -35,40 +39,77 @@ class TreeBudsActivity : AppCompatActivity() {
     recyclerview_gettreebuds.layoutManager = LinearLayoutManager(this)
     recyclerview_gettreebuds.adapter = groupAdapter
 
-    fab.setOnClickListener { view ->
-      Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-              .setAction("Action", null).show()
-    }
     supportActionBar?.setDisplayHomeAsUpEnabled(false)
 
     button_gettreebuds.setOnClickListener {
       if (edittext_ancestorpid.text.isNotBlank()) {
-        GetTreeBuds().execute(edittext_ancestorpid.text.toString())
+        GetTreeBuds().execute(edittext_ancestorpid.text.toString().toUpperCase())
+
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(edittext_ancestorpid.windowToken, 0)
       }
       else {
-        Toast.makeText(this, "Please enter a valid FamilySearch Person ID", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Please enter a valid FamilySearch Person ID", LENGTH_LONG).show()
       }
     }
   }
 
-  class TreeBudItem(val personSummary: PersonSummary): Item<ViewHolder>() {
+  class TreeBudItem(val treeBudRow: TreeBudRow): Item<ViewHolder>() {
     override fun getLayout(): Int {
       Log.d("TreeBudItem:getLayout", "Made it here")
-      return R.layout.tree_bud_row
+      return R.layout.tree_bud_list_item
     }
 
     override fun bind(viewHolder: ViewHolder, position: Int) {
-      Log.d("TreeBudItem:bind", "personSummary=$personSummary")
-      viewHolder.itemView.textView_treePid.text = personSummary.personId
-      viewHolder.itemView.textView_personas.text = personSummary.recordTypes!!.get("NEW_PERSON").toString()
+      Log.d("TreeBudItem:bind", "treeBudRow=$treeBudRow")
+      viewHolder.itemView.person_photo_progress_spinner.visibility = View.GONE
+      viewHolder.itemView.person_name.text = treeBudRow.personName
+      viewHolder.itemView.person_pid.text = treeBudRow.personId
+      viewHolder.itemView.person_lifespan.text = treeBudRow.lifeSpan
+      viewHolder.itemView.person_photo.visibility = View.VISIBLE
+      viewHolder.itemView.record_hint.visibility = View.VISIBLE
+
+      viewHolder.itemView.isClickable = true
+      viewHolder.itemView.setOnClickListener {view ->
+        val dialog = Dialog(view.context)
+        dialog.setContentView(R.layout.person_popup)
+        dialog.setCancelable(true)
+
+        dialog.popup_name.text = treeBudRow.personName
+        dialog.popup_pid.text = treeBudRow.personId
+        dialog.popup_birth.text = treeBudRow.birthDate
+        dialog.popup_birth_place.text = treeBudRow.birthPlace
+        dialog.popup_death.text = treeBudRow.deathDate
+        dialog.popup_death_place.text = treeBudRow.deathPlace
+
+        dialog.show()
+      }
     }
   }
 
-  inner class GetTreeBuds : AsyncTask<String, Void, Summaries>() {
+  inner class GetTreeBuds : AsyncTask<String, Void, MutableList<TreeBudRow>>() {
 
-    override fun doInBackground(vararg params: String): Summaries {
+    override fun doInBackground(vararg params: String): MutableList<TreeBudRow> {
       Log.d("GetTreeBuds:doInBackground", "ancestorPid = ${params[0]}")
 
+      // This will make POP and TF calls to get a list of TreeBuds
+      return buildTreeBudsList(params[0])
+    }
+
+    override fun onPostExecute(result: MutableList<TreeBudRow>) {
+      recyclerview_gettreebuds.adapter = groupAdapter
+
+      if (result.isEmpty()) {
+        Toast.makeText(applicationContext, "No TreeBuds found for this Ancestor", LENGTH_LONG).show()
+      }
+      result.forEach { groupAdapter.add(TreeBudItem(it)) }
+
+    }
+
+    /**
+     * Call POP to get a list of TreeBuds and then TF to decorate the person
+     */
+    private fun buildTreeBudsList(ancestorPid: String): MutableList<TreeBudRow> {
       val httpClient = OkHttpClient.Builder().addInterceptor(AuthorizationInterceptor())
 
       val retrofit = Retrofit.Builder().client(httpClient.build())
@@ -76,22 +117,35 @@ class TreeBudsActivity : AppCompatActivity() {
               .addConverterFactory(MoshiConverterFactory.create())
               .build()
       val popClient = retrofit.create(PopClient::class.java)
-      val response = popClient.getTreeBuds(FsSession.userId, params[0]).execute()
+      val popResponse = popClient.getTreeBuds(FsSession.userId, ancestorPid).execute()
 
-      val body = response.body()
-      if (response.isSuccessful && body != null) {
-        return body
+      val popBody = popResponse.body()
+      if (popResponse.isSuccessful && popBody != null) {
+        // For each person in the Summary list, call TF to get name and lifespan
+        val treeBudRowList = mutableListOf<TreeBudRow>()
+        popBody.personSummaries.forEach {
+          val tfClient = retrofit.create(TFClient::class.java)
+          val tfResponse = tfClient.getTfPersonCard(it.personId).execute()
+
+          val tfBody = tfResponse.body()
+          if (tfResponse.isSuccessful && tfBody != null) {
+            treeBudRowList.add(TreeBudRow(it.personId,
+                    tfBody.summary.name,
+                    tfBody.summary.lifespan,
+                    tfBody.summary.lifespanBegin.date?.original,
+                    tfBody.summary.lifespanBegin.place?.original,
+                    tfBody.summary.lifespanEnd.date?.original,
+                    tfBody.summary.lifespanEnd.place?.original))
+          }
+        }
+        return treeBudRowList
       }
-      val headers = response.headers()
-      Log.d("GetTreeBuds:doInBackground", "headers = $headers")
-      Log.d("GetTreeBuds:doInBackground", "body = ${response.body()}")
-      return Summaries(mutableListOf(PersonSummary()), false)
+
+      return mutableListOf(TreeBudRow(popResponse.code().toString(), "POP Error", "None", "None", "None", "None", "None"))
     }
 
-    override fun onPostExecute(result: Summaries) {
-      result.personSummaries.forEach{ groupAdapter.add(TreeBudItem(it)) }
 
-      recyclerview_gettreebuds.adapter = groupAdapter
-    }
   }
 }
+
+data class TreeBudRow(val personId: String, val personName: String, val lifeSpan: String, val birthDate: String?, val birthPlace: String?, val deathDate: String?, val deathPlace: String?)

@@ -14,7 +14,7 @@ class PersonSummary {
   /**
    * Unique Tree ID of the person who the summary is for.
    */
-  var personId: String? = null
+  var personId: String
   private var hasTemple: Boolean = false
   /**
    * Priority Score of the Temple Opportunity
