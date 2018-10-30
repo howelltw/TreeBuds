@@ -161,23 +161,26 @@ class TreeBudsActivity : AppCompatActivity() {
       val popResponse = popClient.getTreeBuds(FsSession.userId, ancestorPid).execute()
 
       val popBody = popResponse.body()
-      if (popResponse.isSuccessful && popBody != null) {
-        // For each person in the Summary list, call TF to get name and lifespan
+      if (popResponse.isSuccessful) {
         val treeBudRowList = mutableListOf<TreeBudRow>()
-        popBody.personSummaries.forEach {
-          val tfClient = retrofit.create(TFClient::class.java)
-          val tfResponse = tfClient.getTfPersonCard(it.personId).execute()
 
-          val tfBody = tfResponse.body()
-          if (tfResponse.isSuccessful && tfBody != null) {
-            treeBudRowList.add(TreeBudRow(it.personId,
-                    tfBody.summary.name,
-                    tfBody.summary.lifespan,
-                    tfBody.summary.gender,
-                    tfBody.summary.lifespanBegin.date?.original,
-                    tfBody.summary.lifespanBegin.place?.original,
-                    tfBody.summary.lifespanEnd.date?.original,
-                    tfBody.summary.lifespanEnd.place?.original))
+        if (popBody != null) {
+          // For each person in the Summary list, call TF to get name and lifespan
+          popBody.personSummaries.forEach {
+            val tfClient = retrofit.create(TFClient::class.java)
+            val tfResponse = tfClient.getTfPersonCard(it.personId).execute()
+
+            val tfBody = tfResponse.body()
+            if (tfResponse.isSuccessful && tfBody != null) {
+              treeBudRowList.add(TreeBudRow(it.personId,
+                      tfBody.summary.name,
+                      tfBody.summary.lifespan,
+                      tfBody.summary.gender,
+                      tfBody.summary.lifespanBegin?.date?.original,
+                      tfBody.summary.lifespanBegin?.place?.original,
+                      tfBody.summary.lifespanEnd?.date?.original,
+                      tfBody.summary.lifespanEnd?.place?.original))
+            }
           }
         }
         return treeBudRowList
