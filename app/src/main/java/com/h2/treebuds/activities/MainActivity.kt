@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.h2.treebuds.R
 import com.h2.treebuds.client.CisClient
@@ -79,6 +80,9 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this@MainActivity, TreeBudsActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK.or(Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
+      }
+      else {
+        Toast.makeText(this@MainActivity, "CIS httpStatus= $result", Toast.LENGTH_LONG).show()
       }
     }
   }
