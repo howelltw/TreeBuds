@@ -166,8 +166,8 @@ class TreeBudsActivity : AppCompatActivity() {
 
         if (popBody != null) {
           // For each person in the Summary list, call TF to get name and lifespan
+          val tfClient = retrofit.create(TFClient::class.java)
           popBody.personSummaries.forEach {
-            val tfClient = retrofit.create(TFClient::class.java)
             val tfResponse = tfClient.getTfPersonCard(it.personId).execute()
 
             val tfBody = tfResponse.body()
