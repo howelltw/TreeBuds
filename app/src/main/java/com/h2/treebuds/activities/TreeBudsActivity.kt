@@ -3,7 +3,6 @@ package com.h2.treebuds.activities
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
-import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -12,12 +11,13 @@ import android.widget.Toast
 import android.widget.Toast.LENGTH_LONG
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.h2.treebuds.R
-import com.h2.treebuds.client.AuthorizationInterceptor
-import com.h2.treebuds.client.FsSession
-import com.h2.treebuds.client.PopClient
-import com.h2.treebuds.client.TFClient
+import com.h2.treebuds.room.TreePersonEntity
+import com.h2.treebuds.viewmodel.InjectorUtils
+import com.h2.treebuds.viewmodel.TreeBudsViewModel
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.Item
 import com.xwray.groupie.ViewHolder
@@ -25,9 +25,6 @@ import kotlinx.android.synthetic.main.activity_tree_buds.*
 import kotlinx.android.synthetic.main.content_tree_buds.*
 import kotlinx.android.synthetic.main.person_popup.*
 import kotlinx.android.synthetic.main.tree_bud_list_item.view.*
-import okhttp3.OkHttpClient
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 
 class TreeBudsActivity : AppCompatActivity() {
 
@@ -45,7 +42,20 @@ class TreeBudsActivity : AppCompatActivity() {
 
     button_gettreebuds.setOnClickListener {
       if (edittext_ancestorpid.text.isNotBlank()) {
-        GetTreeBuds().execute(edittext_ancestorpid.text.toString().toUpperCase())
+        recyclerview_gettreebuds.adapter = groupAdapter
+        groupAdapter.clear()
+
+        val factory = InjectorUtils.provideTreeBudsViewModelFactory(this.application)
+        // Use ViewModelProviders class to create / get already created TreeBudsViewModel for this view (activity)
+        val viewModel = ViewModelProviders.of(this, factory)
+                .get(TreeBudsViewModel::class.java)
+        viewModel.getTreeBudPersons(edittext_ancestorpid.text.toString().toUpperCase()).observe(this, Observer {
+
+//          if (it.isEmpty()) {
+//            Toast.makeText(applicationContext, "No TreeBuds found for this Ancestor", LENGTH_LONG).show()
+//          }
+          it.forEach { groupAdapter.add(TreeBudItem(it)) }
+        })
 
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(edittext_ancestorpid.windowToken, 0)
@@ -56,9 +66,8 @@ class TreeBudsActivity : AppCompatActivity() {
     }
   }
 
-  class TreeBudItem(val treeBudRow: TreeBudRow): Item<ViewHolder>() {
+  class TreeBudItem(val treeBudRow: TreePersonEntity): Item<ViewHolder>() {
     override fun getLayout(): Int {
-      Log.d("TreeBudItem:getLayout", "Made it here")
       return R.layout.tree_bud_list_item
     }
 
@@ -126,71 +135,4 @@ class TreeBudsActivity : AppCompatActivity() {
       dialog.show()
     }
   }
-
-  inner class GetTreeBuds : AsyncTask<String, Void, MutableList<TreeBudRow>>() {
-
-    override fun doInBackground(vararg params: String): MutableList<TreeBudRow> {
-      Log.d("GetTreeBuds:doInBackground", "ancestorPid = ${params[0]}")
-
-      // This will make POP and TF calls to get a list of TreeBuds
-      return buildTreeBudsList(params[0])
-    }
-
-    override fun onPostExecute(result: MutableList<TreeBudRow>) {
-      recyclerview_gettreebuds.adapter = groupAdapter
-      groupAdapter.clear()
-
-      if (result.isEmpty()) {
-        Toast.makeText(applicationContext, "No TreeBuds found for this Ancestor", LENGTH_LONG).show()
-      }
-      result.forEach { groupAdapter.add(TreeBudItem(it)) }
-
-    }
-
-    /**
-     * Call POP to get a list of TreeBuds and then TF to decorate the person
-     */
-    private fun buildTreeBudsList(ancestorPid: String): MutableList<TreeBudRow> {
-      val httpClient = OkHttpClient.Builder().addInterceptor(AuthorizationInterceptor())
-
-      val retrofit = Retrofit.Builder().client(httpClient.build())
-              .baseUrl("https://www.familysearch.org/")
-              .addConverterFactory(MoshiConverterFactory.create())
-              .build()
-      val popClient = retrofit.create(PopClient::class.java)
-      val popResponse = popClient.getTreeBuds(FsSession.userId, ancestorPid).execute()
-
-      val popBody = popResponse.body()
-      if (popResponse.isSuccessful) {
-        val treeBudRowList = mutableListOf<TreeBudRow>()
-
-        if (popBody != null) {
-          // For each person in the Summary list, call TF to get name and lifespan
-          val tfClient = retrofit.create(TFClient::class.java)
-          popBody.personSummaries.forEach {
-            val tfResponse = tfClient.getTfPersonCard(it.personId).execute()
-
-            val tfBody = tfResponse.body()
-            if (tfResponse.isSuccessful && tfBody != null) {
-              treeBudRowList.add(TreeBudRow(it.personId,
-                      tfBody.summary.name,
-                      tfBody.summary.lifespan,
-                      tfBody.summary.gender,
-                      tfBody.summary.lifespanBegin?.date?.original,
-                      tfBody.summary.lifespanBegin?.place?.original,
-                      tfBody.summary.lifespanEnd?.date?.original,
-                      tfBody.summary.lifespanEnd?.place?.original))
-            }
-          }
-        }
-        return treeBudRowList
-      }
-
-      return mutableListOf(TreeBudRow(popResponse.code().toString(), "POP Error", "httpStatus  =", "Unknown", null, null, null,null))
-    }
-
-
-  }
 }
-
-data class TreeBudRow(val personId: String, val personName: String, val lifeSpan: String, val gender: String, val birthDate: String?, val birthPlace: String?, val deathDate: String?, val deathPlace: String?)
